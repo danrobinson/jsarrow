@@ -15,10 +15,10 @@ npm install danrobinson/jsarrow
 #### Examples
 
 ```javascript
-var JSArrow = require('jsarrow');
+var JSArrowWrapper = require('jsarrow').JSArrowWrapper;
 
-var stringArray = new JSArrow.JSArrowWrapper(["hey", "b"]);
-var numberArray = new JSArrow.JSArrowWrapper([1, 3.5]);
+var stringArray = new JSArrowWrapper(["foo", "bar"]);
+var numberArray = new JSArrowWrapper([1, 3.5]);
 
 console.log(stringArray);
 console.log(numberArray);
