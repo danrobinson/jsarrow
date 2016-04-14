@@ -2,19 +2,37 @@
 
 This is an unofficial work-in-progress implementation of the [Apache Arrow](https://github.com/apache/arrow) format in JavaScript.
 
-#### Installation
+#### Installation (Mac OS X)
 
-Follow the installation instructions for the Arrow C++ library [here](https://github.com/apache/arrow/blob/master/python/doc/INSTALL.md), including the definition of an $ARROW_HOME environment variable.
 
-Then run:
+Before installing the JavaScript library, you must install the C++ libraries. 
 
-```
+Define an `$ARROW_HOME` environment variable to specify where you want the Arrow C++ libraries to be installed (i.e., `/usr/local`).
+
+Make sure you have [cmake](https://cmake.org/) installed. Then run:
+
+
+````bash
+git clone https://github.com/apache/arrow.git
+cd arrow/cpp
+source setup_build_env.sh
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$ARROW_HOME ..
+make
+sudo make install
+
+````
+
+To install the JavaScript library:
+
+````bash
 npm install danrobinson/jsarrow
-```
+````
 
 #### Examples
 
-```javascript
+````javascript
 var JSArrowWrapper = require('jsarrow').JSArrowWrapper;
 
 var stringArray = new JSArrowWrapper(["foo", "bar"]);
@@ -27,4 +45,4 @@ console.log(numberArray.length);
 console.log(stringArray[0]);
 console.log(numberArray[0]);
 
-```
+````

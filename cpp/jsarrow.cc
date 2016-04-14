@@ -19,7 +19,7 @@ using arrow::Type;
 
 using namespace v8;
 
-Persistent<Function> JSArrowWrapper::constructor;
+Nan::Persistent<Function> JSArrowWrapper::constructor;
 
 JSArrowWrapper::JSArrowWrapper(const std::shared_ptr<arrow::Array>& array) {
   array_ = array;
@@ -28,83 +28,105 @@ JSArrowWrapper::JSArrowWrapper(const std::shared_ptr<arrow::Array>& array) {
 JSArrowWrapper::~JSArrowWrapper() {
 }
 
-void JSArrowWrapper::Get(uint32_t index, const PropertyCallbackInfo< Value > &args) {
-  Isolate* isolate = args.GetIsolate();
-  JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(args.Holder());
-  if ((int32_t)index < obj->array_->length()) {
-    args.GetReturnValue().Set(get(obj->array_, index, isolate));
-  } else {
-    args.GetReturnValue().Set(v8::Undefined(isolate));
-  }
-}
+// void JSArrowWrapper::Get(uint32_t index, const PropertyCallbackInfo< Value >& info) {
+//   Nan::HandleScope scope;
+
+//   JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
+//   if ((int32_t)index < obj->array_->length()) {
+//     args.GetReturnValue().Set(get(obj->array_, index, isolate));
+//   } else {
+//     args.GetReturnValue().Set(v8::Undefined(isolate));
+//   }
+// }
 
 
-void JSArrowWrapper::Set(uint32_t index, Local< Value > value, const PropertyCallbackInfo< Value > &args) {
-  args.GetReturnValue().Set(value);
-}
+// void JSArrowWrapper::Set(uint32_t index, Local< Value > value, const PropertyCallbackInfo< Value > &args) {
+//   args.GetReturnValue().Set(value);
+// }
 
 void JSArrowWrapper::Init(Local<Object> exports) {
-  Isolate* isolate = exports->GetIsolate();
+  Nan::HandleScope scope;
 
   // Prepare constructor template
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
-  tpl->SetClassName(String::NewFromUtf8(isolate, "JSArrowWrapper"));
+  Local<FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+  tpl->SetClassName(Nan::New("JSArrowWrapper").ToLocalChecked());
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-  tpl->InstanceTemplate()->SetIndexedPropertyHandler(Get, Set);
+  // tpl->InstanceTemplate()->SetIndexedPropertyHandler(Get, Set);
 
-  // Prototype
-  NODE_SET_PROTOTYPE_METHOD(tpl, "toString", ToString);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "inspect", ToString);
+  // // Prototype
+  Nan::SetPrototypeMethod(tpl, "toString", ToString);
+  Nan::SetPrototypeMethod(tpl, "inspect", ToString);
+  Nan::SetAccessor(tpl->InstanceTemplate(), 
+                   Nan::New("length").ToLocalChecked(), 
+                   JSArrowWrapper::Length);
 
-  constructor.Reset(isolate, tpl->GetFunction());
-  exports->Set(String::NewFromUtf8(isolate, "JSArrowWrapper"),
-               tpl->GetFunction());
+  constructor.Reset(tpl->GetFunction());
+  exports->Set(Nan::New("JSArrowWrapper").ToLocalChecked(), tpl->GetFunction());
 }
 
-void JSArrowWrapper::New(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
-
-  if (args.IsConstructCall()) {
+void JSArrowWrapper::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  if (info.IsConstructCall()) {
     // Invoked as constructor: `new JSArrowWrapper(...)`
-    if (args[0]->IsArray()) {
+    if (info[0]->IsArray()) {
       std::shared_ptr<arrow::Array> array_;
-      Status status = ConvertJSArray(Local<v8::Array>::Cast(args[0]), &array_);
+      Status status = ConvertJSArray(Local<v8::Array>::Cast(info[0]), &array_);
       if (status.ok()) {
         JSArrowWrapper* obj = new JSArrowWrapper(array_);
-        obj->Wrap(args.This());
-        uint32_t length = array_->length();
-        args.This()->Set(String::NewFromUtf8(isolate, "length"), Number::New(isolate, length));
-        args.GetReturnValue().Set(args.This());
+        obj->Wrap(info.This());
+        info.GetReturnValue().Set(info.This());
       } else {
-        isolate->ThrowException(String::NewFromUtf8(isolate, status.ToString().c_str()));
+        Nan::ThrowError(status.ToString().c_str());
       }
     } else {
-      isolate->ThrowException(String::NewFromUtf8(isolate, "Constructor must be passed an array."));
+      Nan::ThrowError("Constructor must be passed an array.");
     }
   } else {
     // Invoked as plain function `JSArrowWrapper(...)`, turn into construct call.
     const int argc = 1;
-    Local<Value> argv[argc] = { args[0] };
-    Local<Function> cons = Local<Function>::New(isolate, constructor);
-    args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+    Local<Value> argv[argc] = { info[0] };
+    Local<Function> cons = Nan::New<v8::Function>(constructor);
+    info.GetReturnValue().Set(cons->NewInstance(argc, argv));
   }
 }
 
-void JSArrowWrapper::ToString(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
+void JSArrowWrapper::ToString(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  Nan::HandleScope scope;
 
-  JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(args.Holder());
+  JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
 
   std::string string_rep = array_format(obj->array_);
 
-  args.GetReturnValue().Set(String::NewFromUtf8(isolate, string_rep.c_str()));
+  info.GetReturnValue().Set(Nan::New(string_rep.c_str()).ToLocalChecked());
 }
+
+// void JSArrowWrapper::Length(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+
+
+//   info.GetReturnValue().Set(Nan::New(obj->array_->length()));
+// }
+
+NAN_GETTER(JSArrowWrapper::Length) {
+  Nan::HandleScope scope;
+  JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
+  info.GetReturnValue().Set(Nan::New(obj->array_->length()));
+}
+
+void Convert(const Nan::FunctionCallbackInfo<Value>& info) {
+  Nan::HandleScope scope;
+  const int argc = 1;
+  Local<Value> argv[argc] = { info[0] };
+  Local<Function> cons = Nan::New<v8::Function>(JSArrowWrapper::constructor);
+  info.GetReturnValue().Set(cons->NewInstance(argc, argv));
+}
+
 
 void init(Local<Object> exports) {
   JSArrowWrapper::Init(exports);
+  Nan::SetMethod(exports, "convert", Convert);
 }
 
 NODE_MODULE(jsarrow, init)
+
 
 }  // namespace jsarrow

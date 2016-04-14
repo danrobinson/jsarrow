@@ -86,44 +86,47 @@ public:
     }
   }
 
-  Status GetType(std::shared_ptr<DataType>* out_type) {
+  std::shared_ptr<DataType> GetType() {
     if (has_struct_) {
-      return Status::NotImplemented("Struct type not yet implemented");
+      // struct to be implemented later
+      return nullptr;
     } else if ((has_number_ + has_string_ + has_list_) > 1) {
       // union to be implemented later
-      return Status::NotImplemented("Union type not yet implemented");
+      return nullptr;
     } else if (has_list_) {
-      std::shared_ptr<DataType> sub_type;
-      JS_RETURN_NOT_OK(list_inferrer_->GetType(&sub_type));
-      *out_type = std::make_shared<arrow::ListType>(sub_type);
+      std::shared_ptr<DataType> sub_type = list_inferrer_->GetType();
+      if (sub_type == nullptr) {
+        return nullptr;
+      } else {
+        return std::make_shared<arrow::ListType>(sub_type);        
+      }
     } else if (has_string_) {
-      *out_type = STRING;
+      return STRING;
     } else if (has_number_) {
       if (has_double_) {
-        *out_type = DOUBLE;
+        return DOUBLE;
       } else if (min_ < 0) {
         if (max_ > (uint32_t)INT32_MAX) {
-          *out_type = INT64;
+          return INT64;
         } else if (max_ > INT16_MAX || min_ < INT16_MIN) {
-          *out_type =  INT32;
+          return INT32;
         } else if (max_ > INT8_MAX || min_ < -INT8_MIN) {
-          *out_type =  INT16;
+          return INT16;
         } else {
-          *out_type =  INT8;
+          return INT8;
         }
       } else {
         if (max_ > UINT16_MAX) {
-          *out_type =  UINT32;
+          return UINT32;
         } else if (max_ > UINT8_MAX) {
-          *out_type =  UINT16;
+          return UINT16;
         } else {
-          *out_type =  UINT8;
+          return UINT8;
         }
       }
     } else {
-      return Status::NotImplemented("Could not determine type.");
+      return nullptr;
     }
-    return Status::OK();
   }
 
   void VisitArray(const Local<Array>& array) {
@@ -154,11 +157,13 @@ static Status InferArrowType(const Local<Array>& array,
 
   if (array->Length() == 0) {
     *out_type = NA;
+  } else {
+    ti.VisitArray(array);
+    *out_type = ti.GetType();
+    if (out_type == nullptr) {
+      return Status::TypeError("Unable to determine data type");
+    }    
   }
-
-  ti.VisitArray(array);
-
-  JS_RETURN_NOT_OK(ti.GetType(out_type));
 
   return Status::OK();
 }
@@ -219,64 +224,10 @@ double GetValue<arrow::DoubleType>(Local<Value>& item) {
  return item->NumberValue();
 }
 
-template<typename T>
-class Builder {};
-
-template<>
-class Builder<arrow::Int64Type> {
-public:
-  using builder_type = arrow::Int64Builder;
-};
-
-template<>
-class Builder<arrow::Int32Type> {
-public:
-  using builder_type = arrow::Int32Builder;
-};
-
-template<>
-class Builder<arrow::Int16Type> {
-public:
-  using builder_type = arrow::Int16Builder;
-};
-
-template<>
-class Builder<arrow::Int8Type> {
-public:
-  using builder_type = arrow::Int8Builder;
-};
-
-template<>
-class Builder<arrow::UInt32Type> {
-public:
-  using builder_type = arrow::UInt32Builder;
-};
-
-template<>
-class Builder<arrow::UInt16Type> {
-public:
-  using builder_type = arrow::UInt16Builder;
-};
-
-template<>
-class Builder<arrow::UInt8Type> {
-public:
-  using builder_type = arrow::UInt8Builder;
-};
-
-template<>
-class Builder<arrow::DoubleType> {
-public:
-  using builder_type = arrow::DoubleBuilder;
-};
-
-template<typename T>
-using GetBuilder = typename Builder<T>::builder_type;
-
 template <typename T>
-class TypedConverter : public SeqConverter {
+class NumericConverter : public SeqConverter {
  public:
-  using BuilderType = arrow::PrimitiveBuilder<T, GetBuilder<T> >;
+  using BuilderType = arrow::NumericBuilder<T>;
   Status Init(const std::shared_ptr<ArrayBuilder>& builder) override {
     builder_ = builder;
     typed_builder_ = static_cast<BuilderType*>(builder.get());
@@ -285,13 +236,14 @@ class TypedConverter : public SeqConverter {
 
   Status AppendData(const Local<Array>& array) override {
     Local<Value> item;
+    RETURN_ARROW_NOT_OK(typed_builder_->Reserve(array->Length()));
     uint32_t size = array->Length();
     for (int64_t i = 0; i < size; ++i) {
       item = array->Get(i);
       if (item->IsNull()) {
-        RETURN_ARROW_NOT_OK(typed_builder_->AppendNull());
+        typed_builder_->AppendNull();
       } else {
-        RETURN_ARROW_NOT_OK(typed_builder_->Append(GetValue<T>(item)));
+        typed_builder_->Append(GetValue<T>(item));
       }
     }
     return Status::OK();
@@ -374,21 +326,21 @@ class ListConverter : public SeqConverter {
 std::shared_ptr<SeqConverter> GetConverter(const std::shared_ptr<DataType>& type) {
   switch (type->type) {
     case Type::INT64:
-      return std::make_shared<TypedConverter<arrow::Int64Type> >();
+      return std::make_shared<NumericConverter<arrow::Int64Type> >();
     case Type::INT32:
-      return std::make_shared<TypedConverter<arrow::Int32Type> >();
+      return std::make_shared<NumericConverter<arrow::Int32Type> >();
     case Type::INT16:
-      return std::make_shared<TypedConverter<arrow::Int16Type> >();
+      return std::make_shared<NumericConverter<arrow::Int16Type> >();
     case Type::INT8:
-      return std::make_shared<TypedConverter<arrow::Int8Type> >();
+      return std::make_shared<NumericConverter<arrow::Int8Type> >();
     case Type::UINT32:
-      return std::make_shared<TypedConverter<arrow::UInt32Type> >();
+      return std::make_shared<NumericConverter<arrow::UInt32Type> >();
     case Type::UINT16:
-      return std::make_shared<TypedConverter<arrow::UInt16Type> >();
+      return std::make_shared<NumericConverter<arrow::UInt16Type> >();
     case Type::UINT8:
-      return std::make_shared<TypedConverter<arrow::UInt8Type> >();
+      return std::make_shared<NumericConverter<arrow::UInt8Type> >();
     case Type::DOUBLE:
-      return std::make_shared<TypedConverter<arrow::DoubleType> >();
+      return std::make_shared<NumericConverter<arrow::DoubleType> >();
     case Type::STRING:
       return std::make_shared<StringConverter>();
     case Type::LIST:
@@ -404,7 +356,14 @@ Status ConvertJSArray(const Local<Array>& array, std::shared_ptr<arrow::Array>* 
   std::shared_ptr<DataType> type;
   JS_RETURN_NOT_OK(InferArrowType(array, &type));
 
+  // Handle NA / NullType case
+  if (type->type == Type::NA) {
+    out->reset(new arrow::NullArray(type, array->Length()));
+    return Status::OK();
+  }
+
   std::shared_ptr<SeqConverter> converter = GetConverter(type);
+
   if (converter == nullptr) {
     std::stringstream ss;
     ss << "No type converter implemented for "

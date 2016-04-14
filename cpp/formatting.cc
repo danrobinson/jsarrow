@@ -42,6 +42,13 @@ std::string value_format(const std::shared_ptr<arrow::ListArray>& array, uint32_
   return ss.str();
 }
 
+std::string value_format(const std::shared_ptr<arrow::NullArray>& array, uint32_t start, uint32_t end) {
+  std::stringstream ss;
+  ss << "[]";
+  return ss.str();
+}
+
+
 std::string value_format(const std::shared_ptr<arrow::Array>& array, uint32_t start, uint32_t end) {
   switch (array->type()->type) {
     case Type::INT64:
@@ -64,6 +71,8 @@ std::string value_format(const std::shared_ptr<arrow::Array>& array, uint32_t st
       return value_format(std::static_pointer_cast<arrow::StringArray>(array), start, end);
     case Type::LIST:
       return value_format(std::static_pointer_cast<arrow::ListArray>(array), start, end);
+    case Type::NA:
+      return value_format(std::static_pointer_cast<arrow::NullArray>(array), start, end);
     case Type::STRUCT:
     default:
       return "Not implemented";
@@ -73,7 +82,8 @@ std::string value_format(const std::shared_ptr<arrow::Array>& array, uint32_t st
 
 std::string array_format(std::shared_ptr<arrow::Array> array) {
   std::stringstream ss;
-  ss << array->type()->ToString() << "\n";
+
+  ss << array->type()->ToString() << " array\n";
   ss << value_format(array, 0, array->length());
   return ss.str();
 }
