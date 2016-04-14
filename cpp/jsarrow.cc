@@ -8,7 +8,6 @@
 namespace jsarrow {
 
 using v8::FunctionCallbackInfo;
-using v8::Isolate;
 using v8::Local;
 using v8::Object;
 using v8::String;
@@ -28,15 +27,19 @@ JSArrowWrapper::JSArrowWrapper(const std::shared_ptr<arrow::Array>& array) {
 JSArrowWrapper::~JSArrowWrapper() {
 }
 
-// void JSArrowWrapper::Get(uint32_t index, const PropertyCallbackInfo< Value >& info) {
-//   Nan::HandleScope scope;
+NAN_INDEX_GETTER(JSArrowWrapper::Get) {
+  Nan::HandleScope scope;
 
-//   JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
-//   if ((int32_t)index < obj->array_->length()) {
-//     args.GetReturnValue().Set(get(obj->array_, index, isolate));
-//   } else {
-//     args.GetReturnValue().Set(v8::Undefined(isolate));
-//   }
+  JSArrowWrapper* obj = Nan::ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
+  
+  if ((int32_t)index < obj->array_->length()) {
+    info.GetReturnValue().Set(get(obj->array_, index));
+  } else {
+    info.GetReturnValue().Set(Nan::Undefined());
+  }
+}
+
+// void JSArrowWrapper::Get(uint32_t index, const PropertyCallbackInfo< Value >& info) {
 // }
 
 
@@ -57,6 +60,8 @@ void JSArrowWrapper::Init(Local<Object> exports) {
   // // Prototype
   Nan::SetPrototypeMethod(tpl, "toString", ToString);
   Nan::SetPrototypeMethod(tpl, "inspect", ToString);
+  Nan::SetIndexedPropertyHandler(tpl->InstanceTemplate(), 
+                 Get);
   Nan::SetAccessor(tpl->InstanceTemplate(), 
                    Nan::New("length").ToLocalChecked(), 
                    JSArrowWrapper::Length);
@@ -93,7 +98,7 @@ void JSArrowWrapper::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 void JSArrowWrapper::ToString(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   Nan::HandleScope scope;
 
-  JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
+  JSArrowWrapper* obj = Nan::ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
 
   std::string string_rep = array_format(obj->array_);
 
@@ -108,7 +113,7 @@ void JSArrowWrapper::ToString(const Nan::FunctionCallbackInfo<v8::Value>& info) 
 
 NAN_GETTER(JSArrowWrapper::Length) {
   Nan::HandleScope scope;
-  JSArrowWrapper* obj = ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
+  JSArrowWrapper* obj = Nan::ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
   info.GetReturnValue().Set(Nan::New(obj->array_->length()));
 }
 
