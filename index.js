@@ -1,1 +1,1 @@
-module.exports = require('./build/Release/jsarrow');
+module.exports = require('./build/Release/jsarrow.node');

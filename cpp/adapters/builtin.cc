@@ -110,7 +110,7 @@ public:
           return INT64;
         } else if (max_ > INT16_MAX || min_ < INT16_MIN) {
           return INT32;
-        } else if (max_ > INT8_MAX || min_ < -INT8_MIN) {
+        } else if (max_ > INT8_MAX || min_ < INT8_MIN) {
           return INT16;
         } else {
           return INT8;

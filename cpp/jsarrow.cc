@@ -4,6 +4,7 @@
 #include "formatting.h"
 #include "status.h"
 #include "get.h"
+#include "to_buffer.h"
 
 namespace jsarrow {
 
@@ -20,32 +21,23 @@ using namespace v8;
 
 Nan::Persistent<Function> JSArrowWrapper::constructor;
 
-JSArrowWrapper::JSArrowWrapper(const std::shared_ptr<arrow::Array>& array) {
-  array_ = array;
-}
+JSArrowWrapper::JSArrowWrapper(const std::shared_ptr<arrow::Array>& array) : array_(array), 
+                                                                             length_((uint32_t)array->length()) 
+                                                                             {}
 
-JSArrowWrapper::~JSArrowWrapper() {
-}
+JSArrowWrapper::~JSArrowWrapper() {}
 
 NAN_INDEX_GETTER(JSArrowWrapper::Get) {
   Nan::HandleScope scope;
 
   JSArrowWrapper* obj = Nan::ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
   
-  if ((int32_t)index < obj->array_->length()) {
+  if (index < obj->length_) {
     info.GetReturnValue().Set(get(obj->array_, index));
   } else {
     info.GetReturnValue().Set(Nan::Undefined());
   }
 }
-
-// void JSArrowWrapper::Get(uint32_t index, const PropertyCallbackInfo< Value >& info) {
-// }
-
-
-// void JSArrowWrapper::Set(uint32_t index, Local< Value > value, const PropertyCallbackInfo< Value > &args) {
-//   args.GetReturnValue().Set(value);
-// }
 
 void JSArrowWrapper::Init(Local<Object> exports) {
   Nan::HandleScope scope;
@@ -60,6 +52,7 @@ void JSArrowWrapper::Init(Local<Object> exports) {
   // // Prototype
   Nan::SetPrototypeMethod(tpl, "toString", ToString);
   Nan::SetPrototypeMethod(tpl, "inspect", ToString);
+  Nan::SetPrototypeMethod(tpl, "toBuffer", ToBuffer);
   Nan::SetIndexedPropertyHandler(tpl->InstanceTemplate(), 
                  Get);
   Nan::SetAccessor(tpl->InstanceTemplate(), 
@@ -105,16 +98,16 @@ void JSArrowWrapper::ToString(const Nan::FunctionCallbackInfo<v8::Value>& info) 
   info.GetReturnValue().Set(Nan::New(string_rep.c_str()).ToLocalChecked());
 }
 
-// void JSArrowWrapper::Length(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-
-
-//   info.GetReturnValue().Set(Nan::New(obj->array_->length()));
-// }
+void JSArrowWrapper::ToBuffer(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  Nan::HandleScope scope;
+  JSArrowWrapper* obj = Nan::ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
+  info.GetReturnValue().Set(to_buffer(obj->array_));
+}
 
 NAN_GETTER(JSArrowWrapper::Length) {
   Nan::HandleScope scope;
   JSArrowWrapper* obj = Nan::ObjectWrap::Unwrap<JSArrowWrapper>(info.Holder());
-  info.GetReturnValue().Set(Nan::New(obj->array_->length()));
+  info.GetReturnValue().Set(Nan::New(obj->length_));
 }
 
 void Convert(const Nan::FunctionCallbackInfo<Value>& info) {

@@ -26,11 +26,13 @@ class JSArrowWrapper : public Nan::ObjectWrap {
 
   static void New(const Nan::FunctionCallbackInfo<v8::Value>& info);
   static void ToString(const Nan::FunctionCallbackInfo<v8::Value>& info);
+  static void ToBuffer(const Nan::FunctionCallbackInfo<v8::Value>& info);
   static NAN_GETTER(Length);
   static NAN_INDEX_GETTER(Get);
   // static void Get(uint32_t index, const Nan::PropertyCallbackInfo<Value>& info);
   // static void Set(uint32_t index, Local<Value> value, const Nan::PropertyCallbackInfo<Value>& info);
   std::shared_ptr<arrow::Array> array_;
+  uint32_t length_;
 };
 
 

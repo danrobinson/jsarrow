@@ -3,7 +3,7 @@
     {
       "target_name": "jsarrow",
       "sources": [ "cpp/jsarrow.cc", "cpp/helpers.cc", "cpp/common.cc", "cpp/adapters/builtin.cc", 
-                   "cpp/formatting.cc", "cpp/status.cc", "cpp/get.cc" ],
+                   "cpp/formatting.cc", "cpp/status.cc", "cpp/get.cc", "cpp/to_buffer.cc" ],
       "include_dirs": [
         "$(ARROW_HOME)/include",
         "<!(node -e \"require('nan')\")"
