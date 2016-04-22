@@ -95,17 +95,16 @@ void ArrayWrapper::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 }
 
 void ArrayWrapper::ToString(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  Nan::HandleScope scope;
+  Nan::EscapableHandleScope scope;
 
   ArrayWrapper* obj = Nan::ObjectWrap::Unwrap<ArrayWrapper>(info.Holder());
 
   std::string string_rep = array_format(obj->array_);
 
-  info.GetReturnValue().Set(Nan::New(string_rep.c_str()).ToLocalChecked());
+  info.GetReturnValue().Set(scope.Escape(Nan::New(string_rep.c_str()).ToLocalChecked()));
 }
 
 void ArrayWrapper::ToBuffer(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  Nan::HandleScope scope;
   ArrayWrapper* obj = Nan::ObjectWrap::Unwrap<ArrayWrapper>(info.Holder());
   info.GetReturnValue().Set(to_buffer(obj->array_));
 }

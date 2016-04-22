@@ -72,7 +72,8 @@ v8::Local<v8::Value> get(const std::shared_ptr<arrow::Array> array, uint32_t ind
       return get(std::static_pointer_cast<arrow::ListArray>(array), index);
     case arrow::Type::STRUCT:
     default:
-      return scope.Escape(Nan::New("Not implemented").ToLocalChecked());
+      Nan::ThrowError("getter not implemented");
+      return scope.Escape(Nan::Null());
       break;
   }
 }
