@@ -4,7 +4,6 @@ This is an unofficial work-in-progress implementation of the [Apache Arrow](http
 
 #### Installation (Mac OS X)
 
-
 Before installing the JavaScript library, you must install the C++ libraries. 
 
 Define an `$ARROW_HOME` environment variable to specify where you want the Arrow C++ libraries to be installed (i.e., `/usr/local`).
@@ -33,10 +32,10 @@ npm install danrobinson/jsarrow
 #### Examples
 
 ````javascript
-var JSArrowWrapper = require('jsarrow').JSArrowWrapper;
+var convert = require('./index').convert;
 
-var stringArray = new JSArrowWrapper(["foo", "bar"]);
-var numberArray = new JSArrowWrapper([1, 3.5]);
+var stringArray = convert(["foo", "bar"]);
+var numberArray = convert([1, 3]);
 
 console.log(stringArray);
 console.log(numberArray);
