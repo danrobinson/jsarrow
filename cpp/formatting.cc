@@ -51,29 +51,29 @@ std::string value_format(const std::shared_ptr<arrow::NullArray>& array, uint32_
 
 std::string value_format(const std::shared_ptr<arrow::Array>& array, uint32_t start, uint32_t end) {
   switch (array->type()->type) {
-    case Type::INT64:
+    case arrow::Type::INT64:
       return value_format_number(std::static_pointer_cast<arrow::Int64Array>(array), start, end);
-    case Type::INT32:
+    case arrow::Type::INT32:
       return value_format_number(std::static_pointer_cast<arrow::Int32Array>(array), start, end);
-    case Type::INT16:
+    case arrow::Type::INT16:
       return value_format_number(std::static_pointer_cast<arrow::Int16Array>(array), start, end);
-    case Type::INT8:
+    case arrow::Type::INT8:
       return value_format_number(std::static_pointer_cast<arrow::Int8Array>(array), start, end);
-    case Type::UINT32:
+    case arrow::Type::UINT32:
       return value_format_number(std::static_pointer_cast<arrow::UInt32Array>(array), start, end);
-    case Type::UINT16:
+    case arrow::Type::UINT16:
       return value_format_number(std::static_pointer_cast<arrow::UInt16Array>(array), start, end);
-    case Type::UINT8:
+    case arrow::Type::UINT8:
       return value_format_number(std::static_pointer_cast<arrow::UInt8Array>(array), start, end);
-    case Type::DOUBLE:
+    case arrow::Type::DOUBLE:
       return value_format_number(std::static_pointer_cast<arrow::DoubleArray>(array), start, end);
-    case Type::STRING:
+    case arrow::Type::STRING:
       return value_format(std::static_pointer_cast<arrow::StringArray>(array), start, end);
-    case Type::LIST:
+    case arrow::Type::LIST:
       return value_format(std::static_pointer_cast<arrow::ListArray>(array), start, end);
-    case Type::NA:
+    case arrow::Type::NA:
       return value_format(std::static_pointer_cast<arrow::NullArray>(array), start, end);
-    case Type::STRUCT:
+    case arrow::Type::STRUCT:
     default:
       return "Not implemented";
       break;

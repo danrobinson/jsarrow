@@ -18,12 +18,13 @@
 // Functions for converting between JS built-in data structures and Arrow
 // data structures
 
-#ifndef JSARROW_ADAPTERS_BUILTIN_H
-#define JSARROW_ADAPTERS_BUILTIN_H
+#ifndef JSARROW_ADAPTERS_TYPE_ADAPTER_H
+#define JSARROW_ADAPTERS_TYPE_ADAPTER_H
 
 #include <arrow/type.h>
 
 #include <v8.h>
+#include <nan.h>
 
 #include "../common.h"
 #include "../status.h"
@@ -34,13 +35,12 @@ using namespace v8;
 
 namespace jsarrow {
 
-class TypeInferrer;
-class SeqConverter;
+// Status ConvertJSType(const v8::Local<Object>& type, arrow::TypePtr* out);
 
-std::shared_ptr<SeqConverter> GetConverter(const std::shared_ptr<arrow::DataType>& type);
+v8::Local<v8::Object> ConvertArrowType(arrow::TypePtr arrowType);
 
-Status ConvertJSArray(const v8::Local<Array>& array, std::shared_ptr<arrow::Array>* out);
+void SetupJSTypes(const Nan::FunctionCallbackInfo<Value>& info);
 
 } // namespace jsarrow
 
-#endif // JSARROW_ADAPTERS_BUILTIN_H
+#endif // JSARROW_ADAPTERS_TYPE_ADAPTER_H

@@ -1,26 +1,119 @@
 var expect = require('chai').expect;
-var JSArrowWrapper = require('../index').JSArrowWrapper;
+var ArrayWrapper = require('../index').ArrayWrapper;
+var types = require('../index').types;
 var convert = require('../index').convert;
 
+describe('NullArray', function() {
+  var arr;
+
+  before(function() {
+    arr = convert([]);
+  });
+
+  it('should be createable', function() {
+    var repr = arr.toString();
+    expect(arr.length).to.be.equal(0);
+    expect(arr.type).to.be.equal(types.NullType);
+    expect(repr).to.be.a('string').and.to.have.length.above(0);
+  });
+
+  // it('can be converted to a buffer', function() {
+  //   buf = arr.toBuffer();
+  //   expect(buf).to.have.length(0);
+  // });
+});
+
 describe('UInt8Array', function() {
+  var arr;
+
+  before(function() {
+    arr = convert([5, 10, 50]);
+  });
+
+  it('can be created', function() {
+    var repr = arr.toString();
+    expect(arr.length).to.be.equal(3);
+    expect(arr.type).to.be.equal(types.UInt8Type);
+    expect(repr).to.be.a('string').and.to.have.length.above(0);
+    expect(arr[0]).to.be.equal(5);
+  });
+
   it('can be converted to a buffer', function() {
-    var uint8array = convert([5, 10, 50]);
-    buf = uint8array.toBuffer();
-    console.log(buf);
+    buf = arr.toBuffer();
     expect(buf).to.have.length(3);
     expect(buf.readUInt8(0)).to.be.equal(5);
     expect(buf.readUInt8(2)).to.be.equal(50);
   });
+
+  it('can be created with nulls', function() {
+    arr = convert([5, null, 50]);
+    expect(arr[1]).to.be.equal(null);
+  });
 });
 
-describe('Int8Array', function() {
-  it('can be converted to a buffer', function() {
-    var int8array = convert([-5, 1, 6]);
-    console.log(int8array)
-    buf = int8array.toBuffer();
-    console.log(buf);
-    expect(buf).to.have.length(3);
-    expect(buf.readInt8(0)).to.be.equal(-5);
-    expect(buf.readInt8(2)).to.be.equal(6);
+describe('ListArray', function() {
+  var arr;
+
+  before(function() {
+    arr = convert([[4, 5], [6, 7]]);
   });
+
+  it('should be createable', function() {
+    var repr = arr.toString();
+    expect(arr.length).to.be.equal(2);
+    // expect(repr).to.be.a('string').and.to.have.length.above(0);
+    // expect(arr[0]).to.be.equal(5);
+  });
+
+  it('should have the right type', function() {
+    var type = arr.type;
+    var ListType = types.ListType;
+    var UInt8Type = types.UInt8Type;
+    expect(type.equals(ListType(UInt8Type))).to.be.true;
+  });
+
+  it('should have items accessible by index', function() {
+    var element = arr[1];
+    expect(element).to.have.length(2);
+    expect(element[0]).to.be.equal(6);
+    expect(element[2]).to.be.equal(undefined);
+  });
+
+  // it('can be converted to a buffer', function() {
+  //   buf = arr.toBuffer();
+  //   expect(buf).to.have.length(3);
+  //   expect(buf.readUInt8(0)).to.be.equal(5);
+  //   expect(buf.readUInt8(2)).to.be.equal(50);
+  // });
+});
+
+
+describe('StringArray', function() {
+  var arr;
+
+  before(function() {
+    arr = convert(["foo", "bar"]);
+  });
+
+  it('should be createable', function() {
+    var repr = arr.toString();
+    expect(arr.length).to.be.equal(2);
+    expect(repr).to.be.a('string').and.to.have.length.above(0);
+    // expect(arr[0]).to.be.equal(5);
+  });
+
+  it('should have the right type', function() {
+    expect(arr.type).to.be.equal(types.StringType);
+  });
+
+  it('should have items accessible by index', function() {
+    expect(arr[1]).to.be.equal("bar");
+  });
+
+  // it('can be converted to a buffer', function() {
+  //   buf = arr.toBuffer();
+  //   expect(buf).to.have.length(3);
+  //   expect(buf.readUInt8(0)).to.be.equal(5);
+  //   expect(buf.readUInt8(2)).to.be.equal(50);
+  // });
 });

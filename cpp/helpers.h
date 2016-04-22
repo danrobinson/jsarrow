@@ -23,9 +23,6 @@
 
 namespace jsarrow {
 
-using arrow::DataType;
-using arrow::Type;
-
 extern const std::shared_ptr<arrow::NullType> NA;
 extern const std::shared_ptr<arrow::BooleanType> BOOL;
 extern const std::shared_ptr<arrow::UInt8Type> UINT8;
@@ -42,7 +39,7 @@ extern const std::shared_ptr<arrow::StringType> STRING;
 
 // types
 
-std::shared_ptr<DataType> GetPrimitiveType(Type::type type);
+std::shared_ptr<arrow::DataType> GetPrimitiveType(arrow::Type::type type);
 
 } // namespace jsarrow
 

@@ -61,7 +61,7 @@ public:
     } else if (val->IsObject()) {
       has_struct_ = true;
     }
-  } 
+  }
 
   void VisitNumber(const Local<Value>& val) {
     if (val->IsUint32()) {
@@ -71,18 +71,7 @@ public:
       int64_t currentInt = (int64_t)val->Int32Value();
       min_ = (min_ < currentInt) ? min_ : currentInt;
     } else {
-      double currentDouble = val->NumberValue();
-      if (currentDouble == rintf(currentDouble) && !isinf(currentDouble)) {
-        if (currentDouble > 0) {
-          uint64_t currentUint = (uint64_t)currentDouble;
-          max_ = (max_ > currentUint) ? max_ : currentUint;
-        } else {
-          int64_t currentInt = (int64_t)currentDouble;
-          min_ = (min_ < currentInt) ? min_ : currentInt;
-        }
-      } else {
-        has_double_ = true;
-      }
+      has_double_ = true;
     }
   }
 
@@ -106,9 +95,7 @@ public:
       if (has_double_) {
         return DOUBLE;
       } else if (min_ < 0) {
-        if (max_ > (uint32_t)INT32_MAX) {
-          return INT64;
-        } else if (max_ > INT16_MAX || min_ < INT16_MIN) {
+        if (max_ > INT16_MAX || min_ < INT16_MIN) {
           return INT32;
         } else if (max_ > INT8_MAX || min_ < INT8_MIN) {
           return INT16;
@@ -236,7 +223,7 @@ class NumericConverter : public SeqConverter {
 
   Status AppendData(const Local<Array>& array) override {
     Local<Value> item;
-    RETURN_ARROW_NOT_OK(typed_builder_->Reserve(array->Length()));
+    RETURN_ARROW_NOT_OK(typed_builder_->Reserve((int32_t)array->Length()));
     uint32_t size = array->Length();
     for (int64_t i = 0; i < size; ++i) {
       item = array->Get(i);
