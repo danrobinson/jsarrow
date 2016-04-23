@@ -31,6 +31,7 @@
 namespace jsarrow {
 
 Nan::Persistent<v8::Object> NullType;
+Nan::Persistent<v8::Object> BooleanType;
 Nan::Persistent<v8::Object> UInt8Type;
 Nan::Persistent<v8::Object> UInt16Type;
 Nan::Persistent<v8::Object> UInt32Type;
@@ -43,6 +44,7 @@ Nan::Persistent<v8::Function> ListType;
 void SetupJSTypes(const Nan::FunctionCallbackInfo<Value>& info) {
   auto types = Local<v8::Object>::Cast(info[0]);
   NullType.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("NullType").ToLocalChecked())));
+  BooleanType.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("BooleanType").ToLocalChecked())));
   UInt8Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("UInt8Type").ToLocalChecked())));
   UInt16Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("UInt16Type").ToLocalChecked())));
   UInt32Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("UInt32Type").ToLocalChecked())));
@@ -93,6 +95,8 @@ v8::Local<v8::Object> ConvertArrowType(arrow::TypePtr arrowType) {
   switch (arrowType->type) {
     case arrow::Type::NA:
       return scope.Escape(Nan::New<v8::Object>(NullType));
+    case arrow::Type::BOOL:
+      return scope.Escape(Nan::New<v8::Object>(BooleanType));
     case arrow::Type::UINT8:
       return scope.Escape(Nan::New<v8::Object>(UInt8Type));
     case arrow::Type::UINT16:

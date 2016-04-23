@@ -17,6 +17,19 @@ std::string value_format_number(const std::shared_ptr<T >& array, uint32_t start
   return ss.str();
 }
 
+std::string value_format(const std::shared_ptr<arrow::BooleanArray>& array, uint32_t start, uint32_t end) {
+  std::stringstream ss;
+  ss << "[";
+  if (end - start > 0) {
+    ss << (array->Value(0) ? "true" : "false");
+  }
+  for (uint32_t i = start + 1; i < end; i++) {
+    ss << ", " << (array->Value(i) ? "true" : "false");
+  }
+  ss << "]";
+  return ss.str();
+}
+
 std::string value_format(const std::shared_ptr<arrow::StringArray>& array, uint32_t start, uint32_t end) {
   std::stringstream ss;
   ss << "[";
@@ -34,7 +47,9 @@ std::string value_format(const std::shared_ptr<arrow::ListArray>& array, uint32_
   std::stringstream ss;
   ss << "[";
   const std::shared_ptr<arrow::Array> values = array->values();
-  if (end - start > 0) ss << "[" << value_format(values, array->offset(0), array->offset(1)) << "]";
+  if (end - start > 0) {
+    ss << "[" << value_format(values, array->offset(0), array->offset(1)) << "]";
+  }
   for (uint32_t i = start + 1; i < end; i++) {
     ss << ", [" << value_format(values, array->offset(i), array->offset(i + 1)) << "]";
   }
@@ -44,10 +59,16 @@ std::string value_format(const std::shared_ptr<arrow::ListArray>& array, uint32_
 
 std::string value_format(const std::shared_ptr<arrow::NullArray>& array, uint32_t start, uint32_t end) {
   std::stringstream ss;
-  ss << "[]";
+  ss << "[";
+  if (end - start > 0) {
+    ss << "null";
+  }
+  for (uint32_t i = start + 1; i < end; i++) {
+    ss << ", null";
+  }
+  ss << "]";
   return ss.str();
 }
-
 
 std::string value_format(const std::shared_ptr<arrow::Array>& array, uint32_t start, uint32_t end) {
   switch (array->type()->type) {
@@ -69,6 +90,8 @@ std::string value_format(const std::shared_ptr<arrow::Array>& array, uint32_t st
       return value_format_number(std::static_pointer_cast<arrow::DoubleArray>(array), start, end);
     case arrow::Type::STRING:
       return value_format(std::static_pointer_cast<arrow::StringArray>(array), start, end);
+    case arrow::Type::BOOL:
+      return value_format(std::static_pointer_cast<arrow::BooleanArray>(array), start, end);
     case arrow::Type::LIST:
       return value_format(std::static_pointer_cast<arrow::ListArray>(array), start, end);
     case arrow::Type::NA:

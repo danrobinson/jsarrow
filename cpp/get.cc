@@ -27,6 +27,15 @@ v8::Local<v8::Value> get(const std::shared_ptr<arrow::StringArray> array, uint32
   }
 }
 
+v8::Local<v8::Value> get(const std::shared_ptr<arrow::BooleanArray> array, uint32_t index) {
+  Nan::EscapableHandleScope scope;
+  if (array->IsNull(index)) {
+    return scope.Escape(Nan::Null());
+  } else {
+    return scope.Escape(Nan::New<v8::Boolean>(array->Value(index)));    
+  }
+}
+
 v8::Local<v8::Value> get(const std::shared_ptr<arrow::ListArray> array, uint32_t index) {
   Nan::EscapableHandleScope scope;
   if (array->IsNull(index)) {
@@ -66,6 +75,8 @@ v8::Local<v8::Value> get(const std::shared_ptr<arrow::Array> array, uint32_t ind
       return get_number(std::static_pointer_cast<arrow::UInt8Array>(array), index);
     case arrow::Type::DOUBLE:
       return get_number(std::static_pointer_cast<arrow::DoubleArray>(array), index);
+    case arrow::Type::BOOL:
+      return get(std::static_pointer_cast<arrow::BooleanArray>(array), index);
     case arrow::Type::STRING:
       return get(std::static_pointer_cast<arrow::StringArray>(array), index);
     case arrow::Type::LIST:

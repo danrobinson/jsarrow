@@ -36,6 +36,7 @@ public:
   TypeInferrer() :
     max_(0),
     min_(0),
+    has_bool_(false),
     has_double_(false),
     has_number_(false),
     has_null_(false),
@@ -47,6 +48,8 @@ public:
   void Visit(const Local<Value>& val) {
     if (val->IsNull()) {
       has_null_ = true;
+    } else if (val->IsBoolean()) {
+      has_bool_ = true;
     } else if (val->IsNumber() && !(has_double_)) {
       has_number_ = true;
       VisitNumber(val);        
@@ -79,7 +82,7 @@ public:
     if (has_struct_) {
       // struct to be implemented later
       return nullptr;
-    } else if ((has_number_ + has_string_ + has_list_) > 1) {
+    } else if ((has_number_ + has_string_ + has_list_ + has_bool_) > 1) {
       // union to be implemented later
       return nullptr;
     } else if (has_list_) {
@@ -91,6 +94,8 @@ public:
       }
     } else if (has_string_) {
       return STRING;
+    } else if (has_bool_) {
+      return BOOL;
     } else if (has_number_) {
       if (has_double_) {
         return DOUBLE;
@@ -112,7 +117,7 @@ public:
         }
       }
     } else {
-      return nullptr;
+      return NA;
     }
   }
 
@@ -127,6 +132,7 @@ public:
 private:
   uint64_t max_;
   int64_t min_;
+  bool has_bool_;
   bool has_double_;
   bool has_number_;
   bool has_null_;
@@ -275,6 +281,36 @@ class StringConverter : public SeqConverter {
   BuilderType* typed_builder_;
 };
 
+class BooleanConverter : public SeqConverter {
+ public:
+  using BuilderType = arrow::BooleanBuilder;
+  Status Init(const std::shared_ptr<ArrayBuilder>& builder) override {
+    builder_ = builder;
+    typed_builder_ = static_cast<BuilderType*>(builder.get());
+    return Status::OK();
+  }
+
+  Status AppendData(const Local<Array>& array) override {
+    Local<Value> item;
+    uint32_t size = array->Length();
+    bool boolValue;
+    RETURN_ARROW_NOT_OK(typed_builder_->Reserve((int32_t)array->Length()));
+    for (int64_t i = 0; i < size; ++i) {
+      item = array->Get(i);
+      if (item->IsNull()) {
+        typed_builder_->AppendNull();
+      } else {
+        boolValue = item->BooleanValue();
+        typed_builder_->Append(boolValue);
+      }
+    }
+    return Status::OK();
+  }
+
+ protected:
+  BuilderType* typed_builder_;
+};
+
 class ListConverter : public SeqConverter {
  public:
   using BuilderType = arrow::ListBuilder;
@@ -328,6 +364,8 @@ std::shared_ptr<SeqConverter> GetConverter(const std::shared_ptr<DataType>& type
       return std::make_shared<NumericConverter<arrow::UInt8Type> >();
     case Type::DOUBLE:
       return std::make_shared<NumericConverter<arrow::DoubleType> >();
+    case Type::BOOL:
+      return std::make_shared<BooleanConverter>();
     case Type::STRING:
       return std::make_shared<StringConverter>();
     case Type::LIST:

@@ -12,6 +12,12 @@ class TypeClass {
 
 // classes for the primitive types
 
+class BooleanClass extends TypeClass {
+  toString() {
+    return "BooleanType";
+  }
+}
+
 class ByteClass extends TypeClass {
   constructor(width) {
     super();
@@ -118,11 +124,16 @@ class ListClass extends TypeClass {
   equals(type) {
     return (this === type || (type.constructor === this.constructor && this.valueType.equals(type.valueType)));
   }
+
+  toString() {
+    return "List<" + this.valueType.toString() + ">"
+  }
 }
 
 // singletons for the primitive types
 
 var NullType = new NullClass();
+var BooleanType = new BooleanClass();
 var UInt8Type = new UInt8Class();
 var UInt16Type = new UInt16Class();
 var UInt32Type = new UInt32Class();
@@ -138,6 +149,7 @@ function ListType(valueType) {
 
 module.exports = {
   NullType: NullType,
+  BooleanType: BooleanType,
   UInt8Type: UInt8Type,
   UInt16Type: UInt16Type,
   UInt32Type: UInt32Type,
