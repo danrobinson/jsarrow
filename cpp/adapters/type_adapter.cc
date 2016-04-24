@@ -30,29 +30,31 @@
 
 namespace jsarrow {
 
-Nan::Persistent<v8::Object> NullType;
-Nan::Persistent<v8::Object> BooleanType;
-Nan::Persistent<v8::Object> UInt8Type;
-Nan::Persistent<v8::Object> UInt16Type;
-Nan::Persistent<v8::Object> UInt32Type;
-Nan::Persistent<v8::Object> Int8Type;
-Nan::Persistent<v8::Object> Int16Type;
-Nan::Persistent<v8::Object> Int32Type;
-Nan::Persistent<v8::Object> StringType;
-Nan::Persistent<v8::Function> ListType;
+Nan::Persistent<v8::Object> na_;
+Nan::Persistent<v8::Object> bool_;
+Nan::Persistent<v8::Object> uint8_;
+Nan::Persistent<v8::Object> uint16_;
+Nan::Persistent<v8::Object> uint32_;
+Nan::Persistent<v8::Object> int8_;
+Nan::Persistent<v8::Object> int16_;
+Nan::Persistent<v8::Object> int32_;
+Nan::Persistent<v8::Object> double_;
+Nan::Persistent<v8::Object> string_;
+Nan::Persistent<v8::Function> list_;
 
 void SetupJSTypes(const Nan::FunctionCallbackInfo<Value>& info) {
   auto types = Local<v8::Object>::Cast(info[0]);
-  NullType.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("NullType").ToLocalChecked())));
-  BooleanType.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("BooleanType").ToLocalChecked())));
-  UInt8Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("UInt8Type").ToLocalChecked())));
-  UInt16Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("UInt16Type").ToLocalChecked())));
-  UInt32Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("UInt32Type").ToLocalChecked())));
-  Int8Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("Int8Type").ToLocalChecked())));
-  Int16Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("Int16Type").ToLocalChecked())));
-  Int32Type.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("Int32Type").ToLocalChecked())));
-  StringType.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("StringType").ToLocalChecked())));
-  ListType.Reset(Local<v8::Function>::Cast(types->Get(Nan::New("ListType").ToLocalChecked())));
+  na_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("na").ToLocalChecked())));
+  bool_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("bool").ToLocalChecked())));
+  uint8_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("uint8").ToLocalChecked())));
+  uint16_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("uint16").ToLocalChecked())));
+  uint32_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("uint32").ToLocalChecked())));
+  int8_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("int8").ToLocalChecked())));
+  int16_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("int16").ToLocalChecked())));
+  int32_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("int32").ToLocalChecked())));
+  double_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("double").ToLocalChecked())));
+  string_.Reset(Local<v8::Object>::Cast(types->Get(Nan::New("string").ToLocalChecked())));
+  list_.Reset(Local<v8::Function>::Cast(types->Get(Nan::New("list").ToLocalChecked())));
 }
 
 // Status ConvertJSType(const v8::Local<Object>& type, arrow::TypePtr* out) {
@@ -86,7 +88,7 @@ v8::Local<v8::Object> ConvertArrowType(arrow::TypePtr arrowType) {
     const int argc = 1;
     Local<v8::Value> argv[argc] = { subtype };
     Local<v8::Object> type = Nan::To<v8::Object>(Nan::Call(
-      Nan::New<v8::Function>(ListType), 
+      Nan::New<v8::Function>(list_), 
       Nan::GetCurrentContext()->Global(), 
       argc,
       argv).ToLocalChecked()).ToLocalChecked();
@@ -94,26 +96,28 @@ v8::Local<v8::Object> ConvertArrowType(arrow::TypePtr arrowType) {
   }
   switch (arrowType->type) {
     case arrow::Type::NA:
-      return scope.Escape(Nan::New<v8::Object>(NullType));
+      return scope.Escape(Nan::New<v8::Object>(na_));
     case arrow::Type::BOOL:
-      return scope.Escape(Nan::New<v8::Object>(BooleanType));
+      return scope.Escape(Nan::New<v8::Object>(bool_));
     case arrow::Type::UINT8:
-      return scope.Escape(Nan::New<v8::Object>(UInt8Type));
+      return scope.Escape(Nan::New<v8::Object>(uint8_));
     case arrow::Type::UINT16:
-      return scope.Escape(Nan::New<v8::Object>(UInt16Type));
+      return scope.Escape(Nan::New<v8::Object>(uint16_));
     case arrow::Type::UINT32:
-      return scope.Escape(Nan::New<v8::Object>(UInt32Type));
+      return scope.Escape(Nan::New<v8::Object>(uint32_));
     case arrow::Type::INT8:
-      return scope.Escape(Nan::New<v8::Object>(Int8Type));
+      return scope.Escape(Nan::New<v8::Object>(int8_));
     case arrow::Type::INT16:
-      return scope.Escape(Nan::New<v8::Object>(Int16Type));
+      return scope.Escape(Nan::New<v8::Object>(int16_));
     case arrow::Type::INT32:
-      return scope.Escape(Nan::New<v8::Object>(Int32Type));
+      return scope.Escape(Nan::New<v8::Object>(int32_));
+    case arrow::Type::DOUBLE:
+      return scope.Escape(Nan::New<v8::Object>(double_));
     case arrow::Type::STRING:
-      return scope.Escape(Nan::New<v8::Object>(StringType));
+      return scope.Escape(Nan::New<v8::Object>(string_));
     default:
       Nan::ThrowTypeError("type converter not yet implemented");
-      return scope.Escape(Nan::New<v8::Object>(NullType));
+      return scope.Escape(Nan::New<v8::Object>(na_));
   }
   // info.GetReturnValue().Set(cons->NewInstance(argc, argv));
 }

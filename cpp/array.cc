@@ -23,7 +23,8 @@ using namespace v8;
 Nan::Persistent<Function> ArrayWrapper::constructor;
 
 ArrayWrapper::ArrayWrapper(const std::shared_ptr<arrow::Array>& array) : array_(array), 
-                                                                         length_((uint32_t)array->length()) 
+                                                                         length_((uint32_t)array->length()),
+                                                                         nullCount_((uint32_t)array->null_count()) 
                                                                          {
   type_.Reset(ConvertArrowType(array->type()));
 }
@@ -61,6 +62,9 @@ void ArrayWrapper::Init(Local<Object> exports) {
   Nan::SetAccessor(tpl->InstanceTemplate(), 
                    Nan::New("length").ToLocalChecked(), 
                    ArrayWrapper::Length);
+  Nan::SetAccessor(tpl->InstanceTemplate(), 
+                   Nan::New("nullCount").ToLocalChecked(), 
+                   ArrayWrapper::NullCount);
   Nan::SetAccessor(tpl->InstanceTemplate(), 
                    Nan::New("type").ToLocalChecked(), 
                    ArrayWrapper::Type);
@@ -113,6 +117,12 @@ NAN_GETTER(ArrayWrapper::Length) {
   Nan::HandleScope scope;
   ArrayWrapper* obj = Nan::ObjectWrap::Unwrap<ArrayWrapper>(info.Holder());
   info.GetReturnValue().Set(Nan::New(obj->length_));
+}
+
+NAN_GETTER(ArrayWrapper::NullCount) {
+  Nan::HandleScope scope;
+  ArrayWrapper* obj = Nan::ObjectWrap::Unwrap<ArrayWrapper>(info.Holder());
+  info.GetReturnValue().Set(Nan::New(obj->nullCount_));
 }
 
 NAN_GETTER(ArrayWrapper::Type) {

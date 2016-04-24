@@ -153,7 +153,7 @@ static Status InferArrowType(const Local<Array>& array,
   } else {
     ti.VisitArray(array);
     *out_type = ti.GetType();
-    if (out_type == nullptr) {
+    if (*out_type == nullptr) {
       return Status::TypeError("Unable to determine data type");
     }    
   }
