@@ -9,7 +9,6 @@
         "$(ARROW_HOME)/include",
         "<!(node -e \"require('nan')\")"
       ],
-      "libraries": [ "$(ARROW_HOME)/lib/libarrow.dylib" ],
       "conditions": [
         [ "OS=='mac'", {
           "xcode_settings": {
@@ -17,6 +16,10 @@
               "OTHER_LDFLAGS": ["-stdlib=libc++"],
               "MACOSX_DEPLOYMENT_TARGET": "10.7"
             },
+          "libraries": [ "$(ARROW_HOME)/lib/libarrow.dylib" ],
+        }],
+        [ "OS=='linux'", {
+          "libraries": [ "$(ARROW_HOME)/lib/libarrow.so" ],
         }],
       ],
     }
