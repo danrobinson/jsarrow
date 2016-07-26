@@ -14,5 +14,9 @@
   },
   "dependencies": {
     "nan": "^2.2.1"
+  },
+  "devDependencies": {
+    "mocha": "2.5.3",
+    "chai": "3.5.0"
   }
 }
