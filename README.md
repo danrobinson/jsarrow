@@ -2,13 +2,13 @@
 
 This is an unofficial work-in-progress implementation of the [Apache Arrow](https://github.com/apache/arrow) format in JavaScript.
 
-#### Installation (Mac OS X)
+#### Installation (Mac OS X and Linux)
 
 Before installing the JavaScript library, you must install the C++ libraries. 
 
 Define an `$ARROW_HOME` environment variable to specify where you want the Arrow C++ libraries to be installed (i.e., `/usr/local`).
 
-Make sure you have [cmake](https://cmake.org/) installed. Then run:
+Make sure you have [cmake](https://cmake.org/install/) installed and added to your PATH. Then run:
 
 
 ````bash
@@ -32,7 +32,7 @@ npm install danrobinson/jsarrow
 #### Examples
 
 ````javascript
-var convert = require('./index').convert;
+var convert = require('jsarrow').convert;
 
 var stringArray = convert(["foo", "bar"]);
 var numberArray = convert([1, 3]);
