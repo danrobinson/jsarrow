@@ -5,6 +5,7 @@
 namespace jsarrow {
 
 v8::Handle<v8::Value> get(const std::shared_ptr<arrow::Array> array, uint32_t index);
+
+v8::Handle<v8::Value> to_native(const std::shared_ptr<arrow::Array> array);
   
 }
-

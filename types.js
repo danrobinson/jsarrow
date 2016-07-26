@@ -6,7 +6,7 @@ class TypeClass {
   }
 
   toString() {
-    return "Type";
+    return "type";
   }
 }
 
@@ -14,7 +14,7 @@ class TypeClass {
 
 class BooleanClass extends TypeClass {
   toString() {
-    return "BooleanType";
+    return "bool";
   }
 }
 
@@ -25,7 +25,11 @@ class ByteClass extends TypeClass {
   }
 }
 
-class NullClass extends TypeClass {}
+class NAClass extends TypeClass {
+  toString() {
+    return "na";
+  }
+}
 
 class NumberClass extends ByteClass {
   constructor(width, min, max) {
@@ -45,7 +49,7 @@ class UInt8Class extends NumberClass {
   }
 
   toString() {
-    return "UInt8Type";
+    return "uint8";
   }
 }
 
@@ -55,7 +59,7 @@ class UInt16Class extends NumberClass {
   }
 
   toString() {
-    return "UInt16Type";
+    return "uint16";
   }
 }
 
@@ -65,7 +69,7 @@ class UInt32Class extends NumberClass {
   }
 
   toString() {
-    return "UInt32Type";
+    return "uint32";
   }
 }
 
@@ -75,7 +79,7 @@ class Int8Class extends NumberClass {
   }
 
   toString() {
-    return "Int8Type";
+    return "int8";
   }
 }
 
@@ -85,7 +89,7 @@ class Int16Class extends NumberClass {
   }
 
   toString() {
-    return "Int16Type";
+    return "int16";
   }
 }
 
@@ -95,7 +99,7 @@ class Int32Class extends NumberClass {
   }
 
   toString() {
-    return "Int32Type";
+    return "int32";
   }
 }
 
@@ -105,13 +109,13 @@ class DoubleClass extends NumberClass {
   }
 
   toString() {
-    return "DoubleType";
+    return "double";
   }
 }
 
 class StringClass extends TypeClass {
   toString() {
-    return "StringType";
+    return "string";
   }
 }
 
@@ -126,37 +130,121 @@ class ListClass extends TypeClass {
   }
 
   toString() {
-    return "List<" + this.valueType.toString() + ">"
+    return "list<item: " + this.valueType.toString() + ">"
+  }
+}
+
+class FieldClass {
+  constructor(name, type) {
+    this.name = name;
+    this.type = type;
+  }
+
+  toString() {
+    return "field('" + this.name + "', " + this.type.toString() + ")";
+  }
+}
+
+class SchemaClass {
+  constructor(fields) {
+    this.fields = fields;
+    Object.defineProperty(this, "length", {"value": fields.length});
+  }
+
+  toString() {
+    if (this.fields.length == 0) {
+      return "schema type {}";
+    }
+    var str = "schema type {" + this.fields[0].name + ": " + this.fields[0].type.toString();
+    for (var i = 1; i < this.fields.length; i++) {
+      str += ", " + this.fields[i].name + ": " + this.fields[i].type.toString();
+    }
+    return str + "}";
+  }
+}
+
+class StructClass {
+  constructor(fields) {
+    this.fields = fields;
+    Object.defineProperty(this, "length", {"value": fields.length});
+  }
+
+  toString() {
+    if (this.fields.length == 0) {
+      return "struct type {}";
+    }
+    var str = "struct type {" + this.fields[0].name + ": " + this.fields[0].type.toString();
+    for (var i = 1; i < this.fields.length; i++) {
+      str += ", " + this.fields[i].name + ": " + this.fields[i].type.toString();
+    }
+    return str + "}";
   }
 }
 
 // singletons for the primitive types
 
-var NullType = new NullClass();
-var BooleanType = new BooleanClass();
-var UInt8Type = new UInt8Class();
-var UInt16Type = new UInt16Class();
-var UInt32Type = new UInt32Class();
-var Int8Type = new Int8Class();
-var Int16Type = new Int16Class();
-var Int32Type = new Int32Class();
-var DoubleType = new DoubleClass();
-var StringType = new StringClass();
+var na = new NAClass();
+var bool = new BooleanClass();
+var uint8 = new UInt8Class();
+var uint16 = new UInt16Class();
+var uint32 = new UInt32Class();
+var int8 = new Int8Class();
+var int16 = new Int16Class();
+var int32 = new Int32Class();
+var double = new DoubleClass();
+var string = new StringClass();
 
-function ListType(valueType) {
+// factory function for relative types and fields
+function list(valueType) {
   return new ListClass(valueType);
 }
 
+function field(name, type) {
+    if (typeof name !== "string") {
+      throw Error("First argument to field() must be a string");
+    } else if (typeof type !== "object" || !(type instanceof TypeClass)) {
+      throw Error("Second argument to field() must be a type object");
+    }
+  return new FieldClass(name, type);
+}
+
+function validate_fields(fields) {
+  if (!Array.isArray(fields)) {
+    throw Error("Not a valid array of fields");
+  }
+  var field;
+  for (var i = 0; i < fields.length; i++) {
+    field = fields[i];
+    if (typeof field !== "object" || !(typeof field !== FieldClass)) {
+      throw Error(field.toString() + " is not a valid field");
+    }
+  }
+  return;
+}
+
+function schema(fields) {
+  validate_fields(fields);
+  return new SchemaClass(fields);
+}
+
+function struct(fields) {
+  validate_fields(fields);
+  return new StructClass(fields);
+}
+
 module.exports = {
-  NullType: NullType,
-  BooleanType: BooleanType,
-  UInt8Type: UInt8Type,
-  UInt16Type: UInt16Type,
-  UInt32Type: UInt32Type,
-  Int8Type: Int8Type,
-  Int16Type: Int16Type,
-  Int32Type: Int32Type,
-  DoubleType: DoubleType,
-  StringType: StringType,
-  ListType: ListType,
+  na: na,
+  bool: bool,
+  uint8: uint8,
+  uint16: uint16,
+  uint32: uint32,
+  int8: int8,
+  int16: int16,
+  int32: int32,
+  double: double,
+  string: string,
+  list: list,
+  field: field,
+  schema: schema,
+  struct: struct
 }

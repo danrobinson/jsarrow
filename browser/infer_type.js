@@ -5,25 +5,25 @@
 
 var types = require("../types");
 
-var NullType = types.NullType;
-var UInt8Type = types.UInt8Type;
-var UInt16Type = types.UInt16Type;
-var UInt32Type = types.UInt32Type;
-var Int8Type = types.Int8Type;
-var Int16Type = types.Int16Type;
-var Int32Type = types.Int32Type;
-var DoubleType = types.DoubleType;
-var StringType = types.StringType;
-var ListType = types.ListType;
+var na = types.na;
+var uint8 = types.uint8;
+var uint16 = types.uint16;
+var uint32 = types.uint32;
+var int8 = types.int8;
+var int16 = types.int16;
+var int32 = types.int32;
+var double = types.double;
+var string = types.string;
+var list = types.list;
 
 var NumberTypes = [
-  UInt8Type,
-  UInt16Type,
-  UInt32Type,
-  Int8Type,
-  Int16Type,
-  Int32Type,
-  DoubleType
+  uint8,
+  uint16,
+  uint32,
+  int8,
+  int16,
+  int32,
+  double
 ]
 
 class TypeInferrer {
@@ -79,7 +79,7 @@ class TypeInferrer {
       throw new Error("Union type not yet implemented.");
     } else if (this.has_number) {
       if (this.has_double) {
-        return DoubleType;
+        return double;
       } else {
         for (var i = 0; i < NumberTypes.length; i++) {
           if (NumberTypes[i].inRange(this.min) && NumberTypes[i].inRange(this.max)) {
@@ -90,15 +90,15 @@ class TypeInferrer {
       }
     } else if (this.has_list) {
       var subtype = this.list_inferrer.getType();
-      return ListType(subtype);
+      return list(subtype);
     } else if (this.has_string) {
-      return StringType;
+      return string;
     } else if (this.has_struct) {
       throw new Error("Struct type not yet implemented.");
     } else if (this.has_boolean) {
       throw new Error("Boolean type not yet implemented.");
     } else {
-      return NullType;
+      return na;
     }
   }
 }

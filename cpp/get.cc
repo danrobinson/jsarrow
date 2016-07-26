@@ -89,4 +89,55 @@ v8::Local<v8::Value> get(const std::shared_ptr<arrow::Array> array, uint32_t ind
   }
 }
 
+
+template<typename T>
+v8::Local<v8::Array> array_to_native(const std::shared_ptr<T> array) {
+  Nan::EscapableHandleScope scope;
+  uint32_t length = array->length();
+  Local<v8::Array> arr = Nan::New<v8::Array>(length);
+  for (uint32_t i = 0; i < length; i++) {
+    Nan::EscapableHandleScope scope;
+    arr->Set(i, scope.Escape(get(array, i)));
+  }
+  return scope.Escape(arr);
+}
+
+
+v8::Local<v8::Value> to_native(const std::shared_ptr<arrow::Array> array, uint32_t index) {
+  Nan::EscapableHandleScope scope;
+  switch (array->type()->type) {
+    case arrow::Type::NA:
+      return scope.Escape(Nan::Null());
+    case arrow::Type::INT64:
+      return array_to_native(std::static_pointer_cast<arrow::Int64Array>(array));
+    case arrow::Type::INT32:
+      return array_to_native(std::static_pointer_cast<arrow::Int32Array>(array));
+    case arrow::Type::INT16:
+      return array_to_native(std::static_pointer_cast<arrow::Int16Array>(array));
+    case arrow::Type::INT8:
+      return array_to_native(std::static_pointer_cast<arrow::Int8Array>(array));
+    case arrow::Type::UINT32:
+      return array_to_native(std::static_pointer_cast<arrow::UInt32Array>(array));
+    case arrow::Type::UINT16:
+      return array_to_native(std::static_pointer_cast<arrow::UInt16Array>(array));
+    case arrow::Type::UINT8:
+      return array_to_native(std::static_pointer_cast<arrow::UInt8Array>(array));
+    case arrow::Type::DOUBLE:
+      return array_to_native(std::static_pointer_cast<arrow::DoubleArray>(array));
+    case arrow::Type::BOOL:
+      return array_to_native(std::static_pointer_cast<arrow::BooleanArray>(array));
+    case arrow::Type::STRING:
+      return array_to_native(std::static_pointer_cast<arrow::StringArray>(array));
+    case arrow::Type::LIST:
+      return array_to_native(std::static_pointer_cast<arrow::ListArray>(array));
+    case arrow::Type::STRUCT:
+    default:
+      Nan::ThrowError("to native not implemented");
+      return scope.Escape(Nan::Null());
+      break;
+  }
+}
+
+
+
 }
